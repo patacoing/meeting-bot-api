@@ -1,18 +1,19 @@
-from datetime import datetime
+from datetime import datetime, timedelta
 from uuid import UUID
 
 import pytest
 
 from app.exceptions import InvalidOptionsCount
 from app.schemas import DiscordRequestData, Command, Option, OptionName, DATE_SEPARATOR, TIME_SEPARATOR
+from app.settings import settings
 from app.utils.operation import plan_meeting
 
 
 @pytest.fixture
 def discord_request_data():
     return DiscordRequestData(options=[
-        Option(name=OptionName.DATE, value="mock-date"),
-        Option(name=OptionName.TIME, value="mock-time"),
+        Option(name=OptionName.DATE, value="25/02"),
+        Option(name=OptionName.TIME, value="15:00"),
         Option(name=OptionName.DESCRIPTION, value="mock-description")
     ], name=Command.PLAN)
 
@@ -30,8 +31,8 @@ def uuid4() -> UUID:
     return UUID("00000000-0000-0000-0000-000000000000")
 
 
-def parse_fields(*args):
-    return "mock-date", "mock-time"
+def parse_fields(length, separator, value, convert):
+    return [25, 2] if separator == DATE_SEPARATOR else [15, 0]
 
 
 @pytest.mark.asyncio
@@ -59,15 +60,19 @@ async def test_plan_meeting_should_return_message_content_when_valid_options_cou
 
     assert message_content == f"Meeting meeting-{uuid4()} planned for {date} at {time} - {description}"
     mocked_uuid4.assert_called_once()
-    mocked_parse_field.assert_any_call(2, DATE_SEPARATOR, date)
-    mocked_parse_field.assert_any_call(2, TIME_SEPARATOR, time)
+    mocked_parse_field.assert_any_call(2, DATE_SEPARATOR, date, int)
+    mocked_parse_field.assert_any_call(2, TIME_SEPARATOR, time, int)
+
+    current_date = datetime(datetime.now().year, 2, 25, 15, 0)
+    current_date -= timedelta(minutes=settings.MINUTES_REMINDER)
+
     mocked_schedule.assert_called_once_with(
-        f"meeting-{uuid4()}",
-        description,
-        year=datetime.now().year,
-        month="mock-time",
-        day="mock-date",
-        hour="mock-date",
-        minute="mock-time"
+        name=f"meeting-{uuid4()}",
+        description=description,
+        year=current_date.year,
+        month=current_date.month,
+        day=current_date.day,
+        hour=current_date.hour,
+        minute=current_date.minute
     )
     mock_logging.info.assert_called_once()

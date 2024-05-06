@@ -17,6 +17,7 @@ class Settings(AwsSettings):
     CLIENT_PUBLIC_KEY: str = ""
     COMMANDS_FILENAME: str = "commands.json"
     DEBUG: bool = False
+    MINUTES_REMINDER: int = 15
 
     class Config:
         env_file = ".env"

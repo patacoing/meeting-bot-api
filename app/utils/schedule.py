@@ -12,10 +12,10 @@ async def schedule(
         name: str,
         description: str,
         year: int,
-        month: str,
-        day: str,
-        hour: str,
-        minute: str
+        month: int,
+        day: int,
+        hour: int,
+        minute: int
 ) -> None:
     try:
         arn = client.create_schedule(
