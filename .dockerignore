@@ -1,0 +1,6 @@
+commands.json
+app/commands.py
+app/__pycache__
+.env
+venv/
+pyvenv.cfg

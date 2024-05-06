@@ -1,0 +1,42 @@
+[
+  {
+    "name": "plan",
+    "description": "Plan a meeting",
+    "options": [
+      {
+        "name": "date",
+        "description": "The date of the meeting (DD/MM)",
+        "type": 3,
+        "required": true,
+        "max_length": 5,
+        "min_length": 5
+      },
+      {
+        "name": "time",
+        "description": "The time of the meeting (HH:MM)",
+        "type": 3,
+        "required": true,
+        "max_length": 5,
+        "min_length": 5
+      },
+      {
+        "name": "description",
+        "description": "A description of the meeting",
+        "type": 3,
+        "required": true
+      }
+    ]
+  },
+  {
+    "name": "cancel",
+    "description": "Cancel a meeting",
+    "options": [
+      {
+        "name": "name",
+        "description": "The name of the meeting",
+        "type": 3,
+        "required": true
+      }
+    ]
+  }
+]
