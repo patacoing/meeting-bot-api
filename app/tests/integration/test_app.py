@@ -1,6 +1,19 @@
 from uuid import UUID
-
+import pytest
 from fastapi import status
+
+from app.main import app, verif
+from fastapi.testclient import TestClient
+
+
+@pytest.fixture
+def client(mocker):
+    app.dependency_overrides[verif] = lambda: None
+    mocked_client = mocker.patch("app.utils.schedule.client")
+    mocked_client.create_schedule.return_value = {"ScheduleArn": "arn"}
+    mocked_client.delete_schedule.return_value = {}
+    mocker.patch("app.utils.operation.uuid4", return_value=UUID("00000000-0000-0000-0000-000000000000"))
+    return TestClient(app)
 
 
 def test_read_root_should_return_200_when_ping(client):
