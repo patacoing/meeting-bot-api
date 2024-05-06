@@ -1,13 +1,22 @@
 import boto3
+
+from app.exceptions import ScheduleNotFound
+from app.schemas import EventBridgeRequest, EventBridgeAction
 from app.settings import settings
-from json import dumps
-from fastapi import HTTPException, status
 from app.utils.logging import logger
 
 client = boto3.client('scheduler', region_name=settings.AWS_REGION)
 
 
-async def schedule(name: str, description: str, year: str, month: str, day: str, hour: str, minute: str) -> None:
+async def schedule(
+        name: str,
+        description: str,
+        year: int,
+        month: str,
+        day: str,
+        hour: str,
+        minute: str
+) -> None:
     try:
         arn = client.create_schedule(
             ActionAfterCompletion="DELETE",
@@ -21,12 +30,13 @@ async def schedule(name: str, description: str, year: str, month: str, day: str,
             Target={
                 "Arn": settings.CALLBACK_SCHEDULE_ARN,
                 "RoleArn": settings.ROLE_ARN,
-                "Input": dumps({
-                    "action": "ping",
-                    "name": name,
-                    "time": f"{hour}:{minute}",
-                    "description": description,
-                })
+                "Input": EventBridgeRequest(
+                    action=EventBridgeAction.PING,
+                    name=name,
+                    time=f"{hour}:{minute}",
+                    description=description,
+                ).json(
+                )
             },
         )
         logger.info(f"ARN : {arn.get('ScheduleArn', '')}")
@@ -36,11 +46,9 @@ async def schedule(name: str, description: str, year: str, month: str, day: str,
 
 async def cancel_schedule(name: str) -> None:
     try:
-        client.delete_schedule(
-            Name=name
-        )
+        client.delete_schedule(Name=name)
     except client.exceptions.ResourceNotFoundException:
         logger.info(f"Schedule {name} not found")
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Schedule {name} not found")
+        raise ScheduleNotFound(name)
     except Exception as ex:
         logger.error(ex)
